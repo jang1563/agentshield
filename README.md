@@ -64,7 +64,7 @@ STRIDE-based analysis of BioTeam-AI identifying 9 attack surfaces:
 | AS-008 | Rate limit evasion | DoS | Medium |
 | AS-009 | Langfuse data leakage | ID | Medium |
 
-Full details in [docs/threat_model.md](docs/threat_model.md).
+Full details in [docs/threat_model.md](docs/threat_model.md). For OWASP Agentic Application risk coverage, see [docs/architecture.md](docs/architecture.md#owasp-top-10-for-agentic-applications-2026-coverage).
 
 ## Attack Suite (40 Scenarios)
 
@@ -202,6 +202,20 @@ AgentShield's output classifier uses [Constitutional BioGuard](../constitutional
 ```bash
 export BIOGUARD_MODEL_DIR=/path/to/constitutional_bioguard/models/deberta_bioguard_v1
 ```
+
+## Limitations
+
+**Statistical power**: Each attack category has 10 scenarios. With n=10, a 90% detection rate has a 95% confidence interval of approximately ±19 percentage points. Results should be interpreted as directional, not definitive benchmarks.
+
+**Mock agent gap**: All attacks run against scripted mock agents, not live BioTeam-AI. Scripted responses may not reflect how real models behave under adversarial pressure.
+
+**Static attack suite**: All 40 scenarios are fixed. An adaptive attacker who iterates based on detection feedback would likely achieve higher ASR than the reported values.
+
+**OWASP ASI coverage**: AgentShield directly addresses 5 of the 10 [OWASP Agentic Application risks (2026)](https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/). ASI06 (cascading failures), ASI08 (rogue agents), and ASI10 (inter-agent communication) are outside scope. See [docs/architecture.md](docs/architecture.md) for the full mapping.
+
+**Tool misuse detection**: TM-07 (tool output exfiltration) is the one unblocked successful attack category. Detecting data exfiltration through tool outputs requires monitoring external side effects beyond the current pipeline.
+
+**Benign FPR scope**: The 4.0% FPR was measured on 100 benign bioinformatics queries. FPR in other domains or with synthesis-planning queries (cloning, Gibson assembly) may be higher.
 
 ## Responsible Use
 

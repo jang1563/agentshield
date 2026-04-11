@@ -138,6 +138,25 @@ Turn Input
        └─> docs/evaluation_report.md
 ```
 
+## OWASP Top 10 for Agentic Applications (2026) Coverage
+
+The [OWASP Top 10 for Agentic Applications 2026](https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/) defines 10 risk categories for autonomous AI systems. AgentShield's detection pipeline explicitly addresses 5 of these:
+
+| OWASP ASI | Risk | AgentShield Coverage | Component |
+|-----------|------|----------------------|-----------|
+| **ASI01** | Agent Behavior Hijacking | **Full** — blocks total agent control loss | All 4 detectors (defense in depth) |
+| **ASI02** | Prompt Injection | **Full** — 18 injection patterns + encoding detection | InputClassifier |
+| **ASI03** | Tool Misuse | **Partial** — allow-list, arg validation, rate limiting | ToolAuditor |
+| **ASI04** | Privilege Escalation | **Partial** — role override patterns detected | InputClassifier |
+| **ASI05** | Data Exfiltration | **Partial** — content flagged post-response; TM-07 remains unblocked | OutputClassifier |
+| **ASI06** | Cascading Failures | **Not covered** — no cross-agent propagation monitoring | — |
+| **ASI07** | Human-Agent Trust Exploitation | **Partial** — multi-turn escalation detected | TrajectoryMonitor |
+| **ASI08** | Rogue Agents | **Not covered** — no agent identity verification | — |
+| **ASI09** | Memory Poisoning | **Partial** — indirect injection scenarios II-01 to II-04 | InputClassifier + OutputClassifier |
+| **ASI10** | Inter-Agent Communication | **Not covered** — single-agent evaluation scope | — |
+
+**Coverage summary**: 5 full/partial, 3 not covered. The uncovered categories (ASI06, ASI08, ASI10) require multi-agent runtime infrastructure beyond the scope of a black-box audit framework.
+
 ## Cross-Project Integration
 
 The output classifier's primary mode uses Constitutional BioGuard's trained DeBERTa model:
