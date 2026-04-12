@@ -33,6 +33,7 @@ dependencies = [
     "transformers>=4.40",
     "torch>=2.2",
     "numpy>=1.26",
+    "scipy>=1.10",
     "matplotlib>=3.8",
     "seaborn>=0.13",
     "tqdm>=4.66",
@@ -49,6 +50,9 @@ dev = ["pytest>=8.0", "ruff>=0.4"]
 
 [tool.setuptools.packages.find]
 include = ["agentshield*"]
+
+[tool.uv.sources]
+constitutional-bioguard = { path = "../constitutional_bioguard" }
 
 [tool.ruff]
 line-length = 100

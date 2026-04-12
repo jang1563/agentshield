@@ -9,7 +9,7 @@ AgentShield is a security audit framework that evaluates agentic AI systems agai
 ┌──────────────────────────────────────────────────────┐
 │                                                      │
 │   Attack Suite ──> Simulation Layer ──> Detectors    │
-│   (40 scenarios)   (mock agents)       (4 pipeline)  │
+│   (100 scenarios)  (mock agents)       (4 pipeline)  │
 │                                                      │
 │                         │                            │
 │                         v                            │
@@ -31,7 +31,7 @@ STRIDE-based analysis mapping 9 attack surfaces in BioTeam-AI to the 6 STRIDE ca
 
 ### 2. Attack Suite (`agentshield/attacks/`)
 
-40 scenarios across 4 categories, each defined as an `AttackScenario` containing:
+100 scenarios across 4 categories (25 per category), each defined as an `AttackScenario` containing:
 - Scenario ID, name, description
 - Attack category and target surface
 - Ordered list of attack messages
@@ -124,9 +124,9 @@ Turn Input
    └─> docs/threat_model.md + data/results/threat_model.json
 
 2. run_evaluation.py
-   ├─> Step 1: Undefended attacks (40 scenarios, no pipeline)
+   ├─> Step 1: Undefended attacks (100 scenarios, no pipeline)
    │   └─> data/results/attack_results_undefended.json
-   ├─> Step 2: Defended attacks (40 scenarios, full pipeline)
+   ├─> Step 2: Defended attacks (100 scenarios, full pipeline)
    │   └─> data/results/attack_results_defended.json
    ├─> Step 3: Benign baselines (100 queries through pipeline)
    │   └─> data/results/benign_baseline_results.json

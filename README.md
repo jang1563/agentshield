@@ -209,7 +209,7 @@ export BIOGUARD_MODEL_DIR=/path/to/constitutional_bioguard/models/deberta_biogua
 
 **Mock agent gap**: All attacks run against scripted mock agents, not live BioTeam-AI. Scripted responses may not reflect how real models behave under adversarial pressure.
 
-**Static attack suite**: All 40 scenarios are fixed. An adaptive attacker who iterates based on detection feedback would likely achieve higher ASR than the reported values.
+**Static attack suite**: All 100 scenarios are fixed. An adaptive attacker who iterates based on detection feedback would likely achieve higher ASR than the reported values.
 
 **OWASP ASI coverage**: AgentShield directly addresses 5 of the 10 [OWASP Agentic Application risks (2026)](https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/). ASI06 (cascading failures), ASI08 (rogue agents), and ASI10 (inter-agent communication) are outside scope. See [docs/architecture.md](docs/architecture.md) for the full mapping.
 
