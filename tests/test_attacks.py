@@ -3,7 +3,10 @@
 import pytest
 
 from agentshield.attacks.base import AttackCategory, AttackResult, AttackScenario
-from agentshield.attacks.runner import get_all_scenarios
+from agentshield.attacks.direct_injection import get_scenarios as get_direct_scenarios
+from agentshield.attacks.runner import get_all_scenarios, run_attack_suite
+from agentshield.detectors.output_classifier import OutputClassifier
+from agentshield.detectors.pipeline import DetectionPipeline
 from agentshield.simulation.mock_agent import AgentMode, MockAgent
 
 
@@ -13,12 +16,12 @@ class TestAttackScenarios:
         return get_all_scenarios()
 
     def test_total_scenario_count(self, all_scenarios):
-        assert len(all_scenarios) == 40
+        assert len(all_scenarios) == 100
 
-    def test_ten_per_category(self, all_scenarios):
+    def test_twenty_five_per_category(self, all_scenarios):
         for cat in AttackCategory:
             count = sum(1 for s in all_scenarios if s.category == cat)
-            assert count == 10, f"{cat.value} has {count} scenarios (expected 10)"
+            assert count == 25, f"{cat.value} has {count} scenarios (expected 25)"
 
     def test_unique_scenario_ids(self, all_scenarios):
         ids = [s.scenario_id for s in all_scenarios]
@@ -34,6 +37,21 @@ class TestAttackScenarios:
             assert any(s.scenario_id.startswith(p) for p in prefixes), (
                 f"Unexpected ID format: {s.scenario_id}"
             )
+
+    def test_direct_tool_escalation_is_detected_when_defended(self, tmp_path):
+        scenario = next(s for s in get_direct_scenarios() if s.scenario_id == "DI-03")
+        pipeline = DetectionPipeline(output_classifier=OutputClassifier(mode="keyword"))
+
+        results = run_attack_suite(
+            mode="defended",
+            detection_pipeline=pipeline,
+            scenarios=[scenario],
+            output_dir=tmp_path,
+        )
+
+        assert len(results) == 1
+        assert results[0].detected
+        assert results[0].blocked
 
 
 class TestMockAgent:

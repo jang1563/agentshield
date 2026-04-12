@@ -1,6 +1,6 @@
 # AgentShield
 
-Security audit framework for agentic AI systems. Applies STRIDE threat modeling, a 40-scenario attack suite (prompt injection, data poisoning, multi-turn escalation, tool misuse), and a 4-component detection pipeline to [BioTeam-AI](https://github.com/jang1563/AI_Scientist_team), a 23-agent bioinformatics system with Docker sandboxing.
+Security audit framework for agentic AI systems. Applies STRIDE threat modeling, a 100-scenario attack suite (prompt injection, data poisoning, multi-turn escalation, tool misuse), and a 4-component detection pipeline to [BioTeam-AI](https://github.com/jang1563/AI_Scientist_team), a 23-agent bioinformatics system with Docker sandboxing.
 
 **Author:** JangKeun Kim, Weill Cornell Medicine (jak4013@med.cornell.edu)
 
@@ -66,14 +66,14 @@ STRIDE-based analysis of BioTeam-AI identifying 9 attack surfaces:
 
 Full details in [docs/threat_model.md](docs/threat_model.md). For OWASP Agentic Application risk coverage, see [docs/architecture.md](docs/architecture.md#owasp-top-10-for-agentic-applications-2026-coverage).
 
-## Attack Suite (40 Scenarios)
+## Attack Suite (100 Scenarios)
 
 | Category | Count | Description |
 |----------|-------|-------------|
-| Direct Injection | 10 | System prompt leak, role override, encoding bypass, DAN, many-shot |
-| Indirect Injection | 10 | Memory poisoning, API injection, cross-agent, workflow hijack |
-| Multi-Turn Escalation | 10 | Gradual escalation across NSABB categories, CoSafe-inspired |
-| Tool Misuse | 10 | Unauthorized access, arg injection, sandbox escape, DoS |
+| Direct Injection | 25 | System prompt leak, role override, encoding bypass, DAN, many-shot, fiction framing, urgency injection, MCP tool description poisoning |
+| Indirect Injection | 25 | Memory poisoning, API injection, cross-agent, workflow hijack, BibTeX/FASTA/UniProt/NCBI metadata injection, cross-session persistence |
+| Multi-Turn Escalation | 25 | Gradual escalation across all 7 NSABB categories, CoSafe-inspired coreference, slow-burn social engineering |
+| Tool Misuse | 25 | Unauthorized access, arg injection, sandbox escape, DoS, MCP tool poisoning, tool chain escalation, async race conditions |
 
 Full catalogue in [docs/attack_catalogue.md](docs/attack_catalogue.md).
 

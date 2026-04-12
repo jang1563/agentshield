@@ -1,4 +1,4 @@
-"""Evaluation metrics: ASR, detection rate, FPR, latency."""
+"""Evaluation metrics: ASR, detection rate, FPR, latency, Wilson CIs."""
 
 from __future__ import annotations
 
@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Optional
 
 import numpy as np
+from scipy import stats
 
 from agentshield.attacks.base import AttackResult
 from agentshield.config import RESULTS_DIR
@@ -15,44 +16,106 @@ from agentshield.config import RESULTS_DIR
 logger = logging.getLogger(__name__)
 
 
+def wilson_ci(successes: int, n: int, confidence: float = 0.95) -> tuple[float, float]:
+    """Wilson score confidence interval for a proportion.
+
+    Returns (lower, upper) bounds. Preferred over normal approximation (Wald)
+    because it remains valid for extreme proportions (p near 0 or 1) and
+    small sample sizes.
+
+    Args:
+        successes: Number of positive outcomes.
+        n: Total number of trials.
+        confidence: Confidence level (default 0.95 for 95% CI).
+
+    Returns:
+        Tuple of (lower_bound, upper_bound) clipped to [0.0, 1.0].
+    """
+    if n == 0:
+        return (0.0, 1.0)
+    z = stats.norm.ppf((1 + confidence) / 2)
+    p_hat = successes / n
+    center = (p_hat + z**2 / (2 * n)) / (1 + z**2 / n)
+    margin = z * ((p_hat * (1 - p_hat) / n + z**2 / (4 * n**2)) ** 0.5) / (1 + z**2 / n)
+    return (max(0.0, center - margin), min(1.0, center + margin))
+
+
 def compute_asr(results: list[AttackResult]) -> dict:
-    """Compute Attack Success Rate overall and per category."""
+    """Compute Attack Success Rate overall and per category.
+
+    Returns overall ASR and per-category breakdown, each augmented with
+    Wilson score 95% confidence intervals, total count, and success count.
+    """
     if not results:
         return {"overall": 0.0, "by_category": {}}
 
-    overall_asr = sum(1 for r in results if r.success) / len(results)
+    n_total = len(results)
+    n_success = sum(1 for r in results if r.success)
+    overall_asr = n_success / n_total
+    ci_lower, ci_upper = wilson_ci(n_success, n_total)
 
     by_category = {}
     for cat in set(r.category for r in results):
         cat_results = [r for r in results if r.category == cat]
-        cat_asr = sum(1 for r in cat_results if r.success) / len(cat_results)
+        cat_n = len(cat_results)
+        cat_success = sum(1 for r in cat_results if r.success)
+        cat_asr = cat_success / cat_n
+        cat_ci_lower, cat_ci_upper = wilson_ci(cat_success, cat_n)
         by_category[cat] = {
             "asr": cat_asr,
-            "n_total": len(cat_results),
-            "n_success": sum(1 for r in cat_results if r.success),
+            "n_total": cat_n,
+            "n_success": cat_success,
+            "ci_lower": cat_ci_lower,
+            "ci_upper": cat_ci_upper,
         }
 
-    return {"overall": overall_asr, "by_category": by_category}
+    return {
+        "overall": overall_asr,
+        "n_total": n_total,
+        "n_success": n_success,
+        "ci_lower": ci_lower,
+        "ci_upper": ci_upper,
+        "by_category": by_category,
+    }
 
 
 def compute_detection_rate(results: list[AttackResult]) -> dict:
-    """Compute detection rate overall and per category."""
+    """Compute detection rate overall and per category.
+
+    Returns overall detection rate and per-category breakdown, each augmented
+    with Wilson score 95% confidence intervals, total count, and detected count.
+    """
     if not results:
         return {"overall": 0.0, "by_category": {}}
 
-    overall_dr = sum(1 for r in results if r.detected) / len(results)
+    n_total = len(results)
+    n_detected = sum(1 for r in results if r.detected)
+    overall_dr = n_detected / n_total
+    ci_lower, ci_upper = wilson_ci(n_detected, n_total)
 
     by_category = {}
     for cat in set(r.category for r in results):
         cat_results = [r for r in results if r.category == cat]
-        cat_dr = sum(1 for r in cat_results if r.detected) / len(cat_results)
+        cat_n = len(cat_results)
+        cat_detected = sum(1 for r in cat_results if r.detected)
+        cat_dr = cat_detected / cat_n
+        cat_ci_lower, cat_ci_upper = wilson_ci(cat_detected, cat_n)
         by_category[cat] = {
             "detection_rate": cat_dr,
-            "n_total": len(cat_results),
-            "n_detected": sum(1 for r in cat_results if r.detected),
+            "n_total": cat_n,
+            "n_detected": cat_detected,
+            "ci_lower": cat_ci_lower,
+            "ci_upper": cat_ci_upper,
         }
 
-    return {"overall": overall_dr, "by_category": by_category}
+    return {
+        "overall": overall_dr,
+        "n_total": n_total,
+        "n_detected": n_detected,
+        "ci_lower": ci_lower,
+        "ci_upper": ci_upper,
+        "by_category": by_category,
+    }
 
 
 def compute_asr_reduction(
@@ -90,17 +153,35 @@ def compute_asr_reduction(
 def compute_fpr(
     benign_results: list[dict],
 ) -> dict:
-    """Compute false positive rate on benign baselines."""
-    if not benign_results:
-        return {"fpr": 0.0, "n_tested": 0, "n_false_positives": 0}
+    """Compute false positive rate on benign baselines.
 
-    n_fp = sum(1 for r in benign_results if r.get("blocked", False))
-    fpr = n_fp / len(benign_results)
+    Returns FPR augmented with Wilson score 95% confidence interval,
+    total count, and false positive count.
+    """
+    if not benign_results:
+        return {
+            "fpr": 0.0,
+            "n_tested": 0,
+            "n_false_positives": 0,
+            "ci_lower": 0.0,
+            "ci_upper": 1.0,
+        }
+
+    n_fp = sum(
+        1
+        for r in benign_results
+        if r.get("flagged", r.get("blocked", False))
+    )
+    n_total = len(benign_results)
+    fpr = n_fp / n_total
+    ci_lower, ci_upper = wilson_ci(n_fp, n_total)
 
     return {
         "fpr": fpr,
-        "n_tested": len(benign_results),
+        "n_tested": n_total,
         "n_false_positives": n_fp,
+        "ci_lower": ci_lower,
+        "ci_upper": ci_upper,
     }
 
 

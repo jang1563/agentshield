@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 
 
 def get_all_scenarios() -> list[AttackScenario]:
-    """Return all 40 attack scenarios across 4 categories."""
+    """Return all 100 attack scenarios across 4 categories (25 per category)."""
     return get_direct() + get_indirect() + get_escalation() + get_tool_misuse()
 
 
@@ -111,6 +111,11 @@ def run_attack_suite(
         # Configure per-scenario agent based on attack metadata
         needs_poison = scenario.metadata.get("requires_poisoned_tools", False)
         is_tool_misuse = scenario.category == AttackCategory.TOOL_MISUSE
+        emit_tool_calls = (
+            is_tool_misuse
+            or needs_poison
+            or scenario.metadata.get("emit_tool_calls", False)
+        )
 
         if simulator is not None:
             sc_sim = simulator
@@ -119,7 +124,7 @@ def run_attack_suite(
                 name="bioteam_agent",
                 mode=agent_mode,
                 poisoned=needs_poison,
-                emit_tool_calls=is_tool_misuse,
+                emit_tool_calls=emit_tool_calls,
             )
             sc_sim = ConversationSimulator(
                 agent=agent,
