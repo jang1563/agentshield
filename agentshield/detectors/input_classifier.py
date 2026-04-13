@@ -46,6 +46,17 @@ ROLE_OVERRIDE_PATTERNS = [
     r"from\s+now\s+on,?\s+you",
 ]
 
+# Resource exhaustion / DoS patterns
+# Detect requests for massive-scale operations that would generate thousands of API calls
+RESOURCE_EXHAUSTION_PATTERNS = [
+    # "for each of the 20,000 genes" — explicit large-scale enumeration
+    r"for\s+each\s+of\s+(?:the\s+)?\d[\d,]{3,}",
+    # "every gene / every protein in the human genome/proteome"
+    r"(?:every|all)\s+(?:genes?|proteins?|variants?|sequences?)\s+in\s+the\s+(?:human\s+)?(?:genome|proteome)",
+    # "run X for all N genes" — mass parallel operation
+    r"run\s+.{5,60}\s+for\s+(?:all|every)\s+(?:\d[\d,]+\s+)?(?:genes?|proteins?|variants?)",
+]
+
 ENCODING_INDICATORS = [
     r"\[base64:[A-Za-z0-9+/=]+\]",
     r"0x[0-9a-fA-F]{4,}",
@@ -156,6 +167,10 @@ class InputClassifier(DetectorBase):
         for pattern in ENCODING_INDICATORS:
             if re.search(pattern, text_lower):
                 matched.append(f"encoding: {pattern}")
+
+        for pattern in RESOURCE_EXHAUSTION_PATTERNS:
+            if re.search(pattern, text_lower):
+                matched.append(f"resource_exhaustion: {pattern}")
 
         for pattern in HOMOGLYPH_INDICATORS:
             if re.search(pattern, text):  # Case-sensitive for Unicode

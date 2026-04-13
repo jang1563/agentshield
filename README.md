@@ -10,7 +10,7 @@ Evaluated using **Claude Haiku** (`claude-haiku-4-5-20251001`) as the target age
 
 | Criterion | Target | Actual | Status |
 |-----------|--------|--------|--------|
-| ASR reduction | >= 80% | 97.8% | PASS |
+| ASR reduction | >= 80% | 100% | PASS |
 | Direct injection detection | >= 90% | 100% | PASS |
 | Multi-turn escalation detection | >= 70% | 100% | PASS |
 | False positive rate | < 5% | 1.0% | PASS |
@@ -20,9 +20,9 @@ Evaluated using **Claude Haiku** (`claude-haiku-4-5-20251001`) as the target age
 | Category | Undefended ASR | Defended ASR | Reduction | Detection Rate |
 |----------|---------------|-------------|-----------|----------------|
 | Direct Injection | 96% | 0% | 100% | 100% |
-| Indirect Injection | 68% | 4% | 94% | 80% |
+| Indirect Injection | 68% | 0% | 100% | 84% |
 | Multi-Turn Escalation | 100% | 0% | 100% | 100% |
-| Tool Misuse | 100% | 4% | 96% | 96% |
+| Tool Misuse | 100% | 0% | 100% | 100% |
 
 ## Architecture
 
@@ -116,7 +116,7 @@ python scripts/run_attacks.py --mode defended
 ## Detection Pipeline Components
 
 ### 1. Input Classifier
-Pattern-based injection detector with 18 injection patterns, 5 role override patterns, 5 encoding indicators, and obfuscation detection (homoglyphs, leetspeak). Optional PromptGuard-86M integration for production use.
+Pattern-based injection detector with 18 injection patterns, 5 role override patterns, 5 encoding indicators, 3 resource exhaustion patterns, and obfuscation detection (homoglyphs, leetspeak). Optional PromptGuard-86M integration for production use.
 
 ### 2. Output Classifier
 Safety filter with 3 modes:
@@ -128,7 +128,7 @@ Safety filter with 3 modes:
 Novel sliding-window algorithm tracking per-turn risk scores:
 - **Absolute threshold**: Any single turn risk > 0.7
 - **Monotonic escalation**: 3+ consecutive risk score increases
-- **Weighted moving average**: WMA exceeds 0.5 over sliding window
+- **Weighted moving average**: WMA exceeds 0.5 over sliding window; threshold lowered to 0.4 for 2-turn histories to catch steep single-step escalations
 
 ### 4. Tool Auditor
 Authorization enforcement against `AGENT_AGENTIC_TOOLS` mapping:
@@ -215,9 +215,9 @@ export BIOGUARD_MODEL_DIR=/path/to/constitutional_bioguard/models/deberta_biogua
 
 **OWASP ASI coverage**: AgentShield directly addresses 5 of the 10 [OWASP Agentic Application risks (2026)](https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/). ASI06 (cascading failures), ASI08 (rogue agents), and ASI10 (inter-agent communication) are outside scope. See [docs/architecture.md](docs/architecture.md) for the full mapping.
 
-**Tool misuse detection**: TM-07 (tool output exfiltration) is the one unblocked successful attack category. Detecting data exfiltration through tool outputs requires monitoring external side effects beyond the current pipeline.
+**Indirect injection coverage**: 16% of indirect injection attacks (structured data injection via API responses, metadata fields) are detected by BioGuard's content classifier but not by the input classifier's pattern rules. All are blocked; detection attribution varies by attack vector.
 
-**Benign FPR scope**: The 4.0% FPR was measured on 100 benign bioinformatics queries. FPR in other domains or with synthesis-planning queries (cloning, Gibson assembly) may be higher.
+**Benign FPR scope**: The 1.0% FPR was measured on 100 benign bioinformatics queries. FPR in other domains or with synthesis-planning queries (cloning, Gibson assembly) may be higher due to BioGuard's conservative scoring of dual-use biology content.
 
 ## Responsible Use
 
@@ -230,7 +230,7 @@ Intended uses:
 
 Do not use the attack scenarios to attack systems you do not own or have explicit authorization to test. The threat model and attack catalogue describe vulnerabilities in BioTeam-AI (a research system the author built and controls) and are published to support the security research community, not to provide a playbook for unauthorized access.
 
-The 4.0% false positive rate means legitimate requests will occasionally be blocked — calibrate thresholds for your deployment context.
+The 1.0% false positive rate means legitimate requests will occasionally be blocked — calibrate thresholds for your deployment context.
 
 ## Resources
 

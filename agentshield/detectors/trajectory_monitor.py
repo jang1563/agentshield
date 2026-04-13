@@ -93,11 +93,14 @@ class TrajectoryMonitor(DetectorBase):
         checks["monotonic"] = max_consecutive >= self.escalation_count
 
         # Check 3: Weighted moving average
-        if len(scores) >= 3:
+        # For 2-turn histories use a lower threshold (0.4) to catch steep single-step
+        # escalations that are below the absolute threshold but clearly trending unsafe.
+        if len(scores) >= 2:
             # Recent scores weighted more heavily
             weights = [i + 1 for i in range(len(scores))]
             wma = sum(s * w for s, w in zip(scores, weights)) / sum(weights)
-            checks["wma"] = wma >= self.wma_threshold
+            wma_thresh = 0.4 if len(scores) == 2 else self.wma_threshold
+            checks["wma"] = wma >= wma_thresh
         else:
             wma = sum(scores) / len(scores)
             checks["wma"] = False

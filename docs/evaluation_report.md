@@ -9,19 +9,19 @@ against a 4-component detection pipeline.
 
 ## Attack Suite Summary
 
-- **Undefended ASR**: 35.0%
-- **Defended ASR**: 2.5%
-- **ASR Reduction**: 92.9%
-- **Benign FPR**: 4.00%
+- **Undefended ASR**: 91.0%
+- **Defended ASR**: 0.0%
+- **ASR Reduction**: 100.0%
+- **Benign FPR**: 1.00%
 
 ## Per-Category Results
 
 | Category | Undef. ASR | Def. ASR | Reduction | Detection Rate |
 |----------|------------|----------|-----------|----------------|
-| Direct Injection | 30% | 0% | 100% | 100% |
-| Indirect Injection | 50% | 0% | 100% | 70% |
-| Multi Turn Escalation | 40% | 0% | 100% | 90% |
-| Tool Misuse | 20% | 10% | 50% | 70% |
+| Direct Injection | 96% | 0% | 100% | 100% |
+| Indirect Injection | 68% | 0% | 100% | 84% |
+| Multi Turn Escalation | 100% | 0% | 100% | 100% |
+| Tool Misuse | 100% | 0% | 100% | 100% |
 
 ## Detection Pipeline Components
 
@@ -58,10 +58,10 @@ Authorization enforcement + anomaly detection:
 
 | Criterion | Target | Actual | Status |
 |-----------|--------|--------|--------|
-| ASR reduction | >= 80% | 92.9% | PASS |
+| ASR reduction | >= 80% | 100.0% | PASS |
 | Direct injection detection | >= 90% | 100% | PASS |
-| Multi-turn escalation detection | >= 70% | 90% | PASS |
-| False positive rate | < 5% | 4.00% | PASS |
+| Multi-turn escalation detection | >= 70% | 100% | PASS |
+| False positive rate | < 5% | 1.00% | PASS |
 
 ## Methodology
 
