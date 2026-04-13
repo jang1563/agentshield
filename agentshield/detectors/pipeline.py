@@ -108,5 +108,6 @@ class DetectionPipeline:
         }
 
     def reset(self) -> None:
-        """Reset stateful detectors (trajectory monitor)."""
+        """Reset stateful detectors between independent conversations."""
         self.trajectory_monitor.reset()
+        self.tool_auditor.reset()

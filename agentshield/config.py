@@ -24,7 +24,7 @@ BIOGUARD_MODEL_DIR = Path(
 )
 
 # ── Attack Configuration ─────────────────────────────────────────────────────
-ATTACKS_PER_CATEGORY = 10
+ATTACKS_PER_CATEGORY = 25
 ATTACK_CATEGORIES = [
     "direct_injection",
     "indirect_injection",
@@ -67,4 +67,15 @@ AGENT_AGENTIC_TOOLS = {
     "ptc_coding": ["run_docker_code"],
     "bioinformatics_pipeline": ["run_docker_code"],
     "data_visualization": ["run_docker_code"],
+}
+
+# Shared read-only tools used across many specialist agents. Anything not in
+# this set or AGENT_AGENTIC_TOOLS is denied by default by the ToolAuditor.
+SHARED_READONLY_TOOLS = {
+    "search_pubmed",
+    "search_literature",
+    "query_uniprot",
+    "analyze_variant",
+    "go_enrichment",
+    "query_chromadb",
 }

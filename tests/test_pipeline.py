@@ -4,8 +4,10 @@ import pytest
 
 from agentshield.detectors.pipeline import DetectionPipeline
 from agentshield.detectors.input_classifier import InputClassifier
+from agentshield.detectors.output_classifier import OutputClassifier
 from agentshield.detectors.trajectory_monitor import TrajectoryMonitor
 from agentshield.detectors.tool_auditor import ToolAuditor
+from agentshield.evaluation.metrics import compute_fpr
 
 
 class TestDetectionPipeline:
@@ -53,6 +55,27 @@ class TestDetectionPipeline:
         pipeline.reset()
         assert len(pipeline.trajectory_monitor.risk_history) == 0
 
+    def test_reset_clears_tool_auditor_state(self):
+        pipeline = DetectionPipeline(
+            output_classifier=OutputClassifier(mode="keyword"),
+            tool_auditor=ToolAuditor(rate_limit=1),
+        )
+        tool_call = [{
+            "tool_name": "search_pubmed",
+            "arguments": {"query": "BRCA1"},
+            "agent_name": "literature_search",
+        }]
+
+        first = pipeline.analyze(tool_calls=tool_call)
+        assert not first["blocked"]
+
+        second = pipeline.analyze(tool_calls=tool_call)
+        assert second["blocked"]
+
+        pipeline.reset()
+        third = pipeline.analyze(tool_calls=tool_call)
+        assert not third["blocked"]
+
     def test_tool_auditor_integration(self, pipeline):
         result = pipeline.analyze(
             tool_calls=[{
@@ -73,3 +96,11 @@ class TestDetectionPipeline:
             }],
         )
         assert result["n_detectors_triggered"] >= 1
+
+    def test_compute_fpr_counts_flagged_non_blocking_cases(self):
+        result = compute_fpr([
+            {"flagged": True, "blocked": False},
+            {"flagged": False, "blocked": False},
+        ])
+        assert result["n_false_positives"] == 1
+        assert result["fpr"] == pytest.approx(0.5)

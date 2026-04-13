@@ -163,22 +163,36 @@ class MockAgent:
 
         tool_patterns = [
             (r"run_docker_code|docker|sandbox|execute.*code|run.*(?:script|code)", "run_docker_code"),
+            (
+                r"\b(store|update|write|save|add)\b.*\b(log|memory|knowledge base|chromadb|collection)\b",
+                "write_chromadb",
+            ),
+            (r"director note|workflow", "manage_workflow"),
+            (
+                r"tell the .* agent|route.*agent|switch.*agent|escalate to|modify agent permissions",
+                "manage_agents",
+            ),
+            (r"mcp|admin.*endpoint", "mcp_admin"),
             (r"search.*pubmed|pubmed", "search_pubmed"),
+            (r"search.*literature|recent papers|most cited papers|literature database", "search_literature"),
             (r"uniprot", "query_uniprot"),
             (r"variant|gene:|look up.*this", "analyze_variant"),
             (r"go enrichment|gene ontology", "go_enrichment"),
-            (r"mcp|admin.*endpoint", "mcp_admin"),
-            (r"chromadb|memory|knowledge base|store.*note|literature", "query_chromadb"),
-            (r"substitute|route.*agent|switch.*agent|escalate", "agent_router"),
+            (
+                r"\b(retrieve|query|search|load|read|gather)\b.*\b(context|log|memory|knowledge base|chromadb|collection)\b",
+                "query_chromadb",
+            ),
         ]
 
+        seen_tools = set()
         for pattern, tool_name in tool_patterns:
-            if re.search(pattern, input_lower):
+            if tool_name not in seen_tools and re.search(pattern, input_lower):
                 calls.append({
                     "tool_name": tool_name,
                     "arguments": {"raw_input": user_input[:200]},
                     "agent_name": self.name,
                 })
+                seen_tools.add(tool_name)
 
         return calls
 

@@ -74,6 +74,17 @@ class TestToolAuditor:
         )
         assert result.flagged
 
+    def test_denies_unknown_sensitive_tool_by_default(self, auditor):
+        result = auditor.detect(
+            tool_calls=[{
+                "tool_name": "mcp_admin",
+                "arguments": {"raw_input": "modify agent permissions"},
+                "agent_name": "literature_search",
+            }]
+        )
+        assert result.flagged
+        assert "Unauthorized" in result.reason
+
     def test_allows_authorized_tool(self, auditor):
         result = auditor.detect(
             tool_calls=[{
@@ -88,6 +99,24 @@ class TestToolAuditor:
     def test_no_tool_calls(self, auditor):
         result = auditor.detect(tool_calls=[])
         assert not result.flagged
+
+    def test_reset_clears_rate_limit_state(self):
+        auditor = ToolAuditor(rate_limit=1)
+        call = [{
+            "tool_name": "search_pubmed",
+            "arguments": {"query": "TP53"},
+            "agent_name": "literature_search",
+        }]
+        first = auditor.detect(tool_calls=call)
+        assert not first.flagged
+
+        second = auditor.detect(tool_calls=call)
+        assert second.flagged
+        assert "Rate limit exceeded" in second.reason
+
+        auditor.reset()
+        after_reset = auditor.detect(tool_calls=call)
+        assert not after_reset.flagged
 
 
 class TestTrajectoryMonitor:

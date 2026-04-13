@@ -15,7 +15,11 @@ from collections import defaultdict
 from typing import Optional
 import time
 
-from agentshield.config import AGENT_AGENTIC_TOOLS, TOOL_CALL_RATE_LIMIT
+from agentshield.config import (
+    AGENT_AGENTIC_TOOLS,
+    SHARED_READONLY_TOOLS,
+    TOOL_CALL_RATE_LIMIT,
+)
 from agentshield.detectors.base import DetectionResult, DetectorBase
 
 logger = logging.getLogger(__name__)
@@ -116,13 +120,24 @@ class ToolAuditor(DetectorBase):
 
     def _is_authorized(self, agent_name: str, tool_name: str) -> bool:
         """Check if an agent is authorized to use a tool."""
-        # Tools not in the agentic tools mapping are available to all
+        if tool_name in SHARED_READONLY_TOOLS:
+            return True
+
         all_restricted_tools = set()
         for tools in AGENT_AGENTIC_TOOLS.values():
             all_restricted_tools.update(tools)
 
-        if tool_name not in all_restricted_tools:
-            return True  # Not a restricted tool
+        if (
+            tool_name not in all_restricted_tools
+            and not tool_name.startswith(("manage_", "approve_", "assign_", "write_"))
+            and "admin" not in tool_name
+        ):
+            logger.warning(
+                "Unknown tool '%s' denied by default for agent '%s'",
+                tool_name,
+                agent_name,
+            )
+            return False
 
         # Check if agent has explicit access
         allowed = AGENT_AGENTIC_TOOLS.get(agent_name, [])
@@ -151,3 +166,7 @@ class ToolAuditor(DetectorBase):
         self._call_timestamps[key].append(now)
 
         return len(self._call_timestamps[key]) > self.rate_limit
+
+    def reset(self) -> None:
+        """Clear accumulated rate-limit state between independent runs."""
+        self._call_timestamps.clear()
