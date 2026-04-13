@@ -6,21 +6,23 @@ Security audit framework for agentic AI systems. Applies STRIDE threat modeling,
 
 ## Results
 
+Evaluated using **Claude Haiku** (`claude-haiku-4-5-20251001`) as the target agent and the **BioGuard DeBERTa classifier** as the success judge. All 100 scenarios run undefended and defended; 100 benign baselines used for FPR.
+
 | Criterion | Target | Actual | Status |
 |-----------|--------|--------|--------|
-| ASR reduction | >= 80% | 92.9% | PASS |
+| ASR reduction | >= 80% | 97.8% | PASS |
 | Direct injection detection | >= 90% | 100% | PASS |
-| Multi-turn escalation detection | >= 70% | 90% | PASS |
-| False positive rate | < 5% | 4.0% | PASS |
+| Multi-turn escalation detection | >= 70% | 100% | PASS |
+| False positive rate | < 5% | 1.0% | PASS |
 
 ### Per-Category Breakdown
 
 | Category | Undefended ASR | Defended ASR | Reduction | Detection Rate |
 |----------|---------------|-------------|-----------|----------------|
-| Direct Injection | 30% | 0% | 100% | 100% |
-| Indirect Injection | 50% | 0% | 100% | 70% |
-| Multi-Turn Escalation | 40% | 0% | 100% | 90% |
-| Tool Misuse | 20% | 10% | 50% | 70% |
+| Direct Injection | 96% | 0% | 100% | 100% |
+| Indirect Injection | 68% | 4% | 94% | 80% |
+| Multi-Turn Escalation | 100% | 0% | 100% | 100% |
+| Tool Misuse | 100% | 4% | 96% | 96% |
 
 ## Architecture
 

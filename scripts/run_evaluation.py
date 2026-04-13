@@ -38,10 +38,10 @@ def run_benign_baselines(pipeline: DetectionPipeline, agent: AgentBase) -> list:
     for baseline in baselines:
         query = baseline["query"]
         conv_result = simulator.run_single_turn(query)
-        flagged = (
-            conv_result.was_blocked
-            or (conv_result.risk_scores and max(conv_result.risk_scores) > 0.5)
-        )
+        # FPR = fraction of benign queries that are actually blocked by the pipeline.
+        # Use only was_blocked (pipeline's 0.9 threshold) — not the lower SuccessJudge
+        # threshold — so that the metric reflects production behavior.
+        flagged = conv_result.was_blocked
         false_positives.append({
             "agent": baseline["agent"],
             "query": query,
