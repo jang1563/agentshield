@@ -230,6 +230,14 @@ Do not use the attack scenarios to attack systems you do not own or have explici
 
 The 4.0% false positive rate means legitimate requests will occasionally be blocked — calibrate thresholds for your deployment context.
 
+## Resources
+
+| Artifact | Link |
+|----------|------|
+| GitHub | [github.com/jang1563/agentshield](https://github.com/jang1563/agentshield) |
+| Attack Scenarios Dataset | [huggingface.co/datasets/jang1563/agentshield-attack-scenarios](https://huggingface.co/datasets/jang1563/agentshield-attack-scenarios) |
+| BioGuard Classifier | [huggingface.co/jang1563/constitutional-bioguard-deberta-v1](https://huggingface.co/jang1563/constitutional-bioguard-deberta-v1) |
+
 ## Citation
 
 If you use this work, please cite:
