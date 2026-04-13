@@ -20,6 +20,7 @@ from agentshield.attacks.multi_turn_escalation import get_scenarios as get_escal
 from agentshield.attacks.tool_misuse import get_scenarios as get_tool_misuse
 from agentshield.config import RESULTS_DIR
 from agentshield.evaluation.judge import SuccessJudge
+from agentshield.simulation.agent_base import AgentBase
 from agentshield.simulation.conversation import ConversationSimulator
 from agentshield.simulation.mock_agent import AgentMode, MockAgent
 
@@ -98,6 +99,7 @@ def run_attack_suite(
     agent_mode: AgentMode = AgentMode.SCRIPTED,
     output_dir: Optional[Path] = None,
     scenarios: Optional[list[AttackScenario]] = None,
+    agent: Optional[AgentBase] = None,
     simulator: Optional[ConversationSimulator] = None,
     judge: Optional[SuccessJudge] = None,
 ) -> list[AttackResult]:
@@ -106,10 +108,16 @@ def run_attack_suite(
     Args:
         mode: "undefended" or "defended".
         detection_pipeline: Optional detection pipeline (for defended mode).
-        agent_mode: Mock agent response mode.
+        agent_mode: Mock agent response mode (ignored when agent is provided).
         output_dir: Where to save results.
-        scenarios: Optional list of scenarios (defaults to all 40).
-        simulator: Optional pre-configured simulator.
+        scenarios: Optional list of scenarios (defaults to all 100).
+        agent: Optional pre-built agent (e.g., LLMAgent). When provided, a fresh
+            ConversationSimulator is created per scenario. MockAgent instances get
+            per-scenario poisoned/emit_tool_calls applied; other agents (LLMAgent)
+            share a single instance and rely on reset() between scenarios.
+        simulator: Pre-configured simulator (used as-is; bypasses per-scenario
+            metadata — intended for unit tests only).
+        judge: Optional SuccessJudge. When None, falls back to keyword heuristic.
 
     Returns:
         List of AttackResult for all scenarios.
@@ -123,7 +131,7 @@ def run_attack_suite(
 
     results = []
     for scenario in tqdm(scenarios, desc=f"Attacks ({mode})"):
-        # Configure per-scenario agent based on attack metadata
+        # Per-scenario metadata (MockAgent-specific — determines agent config)
         needs_poison = scenario.metadata.get("requires_poisoned_tools", False)
         is_tool_misuse = scenario.category == AttackCategory.TOOL_MISUSE
         emit_tool_calls = (
@@ -133,16 +141,38 @@ def run_attack_suite(
         )
 
         if simulator is not None:
+            # Test path: use provided simulator as-is (no per-scenario config)
             sc_sim = simulator
+        elif agent is not None and isinstance(agent, MockAgent):
+            # MockAgent path: create fresh instance per scenario with correct metadata
+            sc_agent = MockAgent(
+                name=agent.name,
+                mode=agent.mode,
+                tools=agent.tools,
+                system_prompt=agent.system_prompt,
+                poisoned=needs_poison,
+                emit_tool_calls=emit_tool_calls,
+            )
+            sc_sim = ConversationSimulator(
+                agent=sc_agent,
+                detection_pipeline=detection_pipeline,
+            )
+        elif agent is not None:
+            # LLMAgent (or other AgentBase): reuse instance; reset() called per conversation
+            sc_sim = ConversationSimulator(
+                agent=agent,
+                detection_pipeline=detection_pipeline,
+            )
         else:
-            agent = MockAgent(
+            # Legacy path: create MockAgent from agent_mode
+            sc_agent = MockAgent(
                 name="bioteam_agent",
                 mode=agent_mode,
                 poisoned=needs_poison,
                 emit_tool_calls=emit_tool_calls,
             )
             sc_sim = ConversationSimulator(
-                agent=agent,
+                agent=sc_agent,
                 detection_pipeline=detection_pipeline,
             )
 

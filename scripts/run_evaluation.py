@@ -123,7 +123,7 @@ def main():
         undefended_results = run_attack_suite(
             mode="undefended",
             detection_pipeline=None,
-            simulator=ConversationSimulator(agent=agent),
+            agent=agent,
             scenarios=scenarios,
             output_dir=output_dir,
             judge=judge,
@@ -133,7 +133,7 @@ def main():
         defended_results = run_attack_suite(
             mode="defended",
             detection_pipeline=pipeline,
-            simulator=ConversationSimulator(agent=agent, detection_pipeline=pipeline),
+            agent=agent,
             scenarios=scenarios,
             output_dir=output_dir,
             judge=judge,

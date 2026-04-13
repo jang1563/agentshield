@@ -14,9 +14,10 @@ if TYPE_CHECKING:
 
 
 class AgentBase(ABC):
-    """Abstract base for simulated and real LLM agents."""
+    """Abstract base for simulated and real LLM agents.
 
-    name: str = "agent"
+    Subclasses must set self.name in __init__ and implement process() and reset().
+    """
 
     @abstractmethod
     def process(self, user_input: str) -> "AgentMessage":
