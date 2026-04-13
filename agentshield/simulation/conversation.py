@@ -11,6 +11,7 @@ from typing import Optional
 
 from pydantic import BaseModel, Field
 
+from agentshield.simulation.agent_base import AgentBase
 from agentshield.simulation.mock_agent import AgentMessage, AgentMode, MockAgent
 
 logger = logging.getLogger(__name__)
@@ -60,7 +61,7 @@ class ConversationSimulator:
 
     def __init__(
         self,
-        agent: Optional[MockAgent] = None,
+        agent: Optional[AgentBase] = None,
         detection_pipeline=None,
         max_turns: int = 10,
     ):

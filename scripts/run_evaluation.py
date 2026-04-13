@@ -14,19 +14,22 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 from agentshield.attacks.runner import get_all_scenarios, run_attack_suite
 from agentshield.attacks.base import AttackResult
+from agentshield.evaluation.judge import SuccessJudge
+from agentshield.simulation.agent_base import AgentBase
 from agentshield.simulation.mock_agent import AgentMode, MockAgent
+from agentshield.simulation.llm_agent import LLMAgent
 from agentshield.simulation.conversation import ConversationSimulator
 from agentshield.detectors.pipeline import DetectionPipeline
 from agentshield.evaluation.metrics import generate_evaluation_summary
 from agentshield.evaluation.benchmarks import get_benign_baselines
 from agentshield.evaluation.figures import generate_all_figures
 from agentshield.evaluation.report_generator import generate_evaluation_report
-from agentshield.config import RESULTS_DIR, DOCS_DIR, FIGURES_DIR
+from agentshield.config import LLM_AGENT_MODEL, RESULTS_DIR, DOCS_DIR, FIGURES_DIR
 
 logger = logging.getLogger(__name__)
 
 
-def run_benign_baselines(pipeline: DetectionPipeline, agent: MockAgent) -> list:
+def run_benign_baselines(pipeline: DetectionPipeline, agent: AgentBase) -> list:
     """Run benign baselines through defended pipeline to measure FPR."""
     baselines = get_benign_baselines()
     simulator = ConversationSimulator(agent=agent, detection_pipeline=pipeline)
@@ -54,9 +57,15 @@ def main():
     parser = argparse.ArgumentParser(description="Run full AgentShield evaluation")
     parser.add_argument(
         "--agent-mode",
-        choices=["echo", "scripted", "llm"],
+        choices=["scripted", "echo", "llm"],
         default="scripted",
-        help="Mock agent response mode (default: scripted)",
+        help="Agent response mode: 'scripted' (mock) or 'llm' (real API calls, cached). Default: scripted",
+    )
+    parser.add_argument(
+        "--agent-model",
+        type=str,
+        default=LLM_AGENT_MODEL,
+        help=f"Model for LLM agent mode (default: {LLM_AGENT_MODEL})",
     )
     parser.add_argument(
         "--skip-attacks",
@@ -82,8 +91,17 @@ def main():
     FIGURES_DIR.mkdir(parents=True, exist_ok=True)
 
     scenarios = get_all_scenarios()
-    agent = MockAgent(mode=AgentMode(args.agent_mode))
     pipeline = DetectionPipeline()
+
+    # Configure agent and judge based on mode
+    judge: SuccessJudge | None = None
+    if args.agent_mode == "llm":
+        logger.info("LLM mode: using %s as target agent", args.agent_model)
+        agent: AgentBase = LLMAgent(model=args.agent_model)
+        judge = SuccessJudge()
+        logger.info("SuccessJudge: mode=%s", judge._mode)
+    else:
+        agent = MockAgent(mode=AgentMode(args.agent_mode))
 
     # Step 1: Run attacks (or load existing results)
     if args.skip_attacks:
@@ -105,18 +123,20 @@ def main():
         undefended_results = run_attack_suite(
             mode="undefended",
             detection_pipeline=None,
-            agent_mode=AgentMode(args.agent_mode),
+            simulator=ConversationSimulator(agent=agent),
             scenarios=scenarios,
             output_dir=output_dir,
+            judge=judge,
         )
 
         logger.info("=== Step 2: Running defended attack suite ===")
         defended_results = run_attack_suite(
             mode="defended",
             detection_pipeline=pipeline,
-            agent_mode=AgentMode(args.agent_mode),
+            simulator=ConversationSimulator(agent=agent, detection_pipeline=pipeline),
             scenarios=scenarios,
             output_dir=output_dir,
+            judge=judge,
         )
 
     # Step 3: Run benign baselines

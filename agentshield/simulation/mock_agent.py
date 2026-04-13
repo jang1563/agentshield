@@ -18,6 +18,8 @@ from typing import Optional
 
 from pydantic import BaseModel, Field
 
+from agentshield.simulation.agent_base import AgentBase
+
 logger = logging.getLogger(__name__)
 
 
@@ -37,7 +39,7 @@ class AgentMessage(BaseModel):
     metadata: dict = Field(default_factory=dict)
 
 
-class MockAgent:
+class MockAgent(AgentBase):
     """Simulated BioTeam-AI agent for attack testing.
 
     Replicates the interface of BioTeam-AI's BaseAgent but with

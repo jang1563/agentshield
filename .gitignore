@@ -24,6 +24,8 @@ env/
 
 # Results and generated data (re-run evaluation to reproduce)
 data/results/
+data/llm_cache/
+data/hf_export/
 
 # IDE
 .vscode/
