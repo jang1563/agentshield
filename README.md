@@ -1,8 +1,29 @@
 # AgentShield
 
-Security audit framework for agentic AI systems. Applies STRIDE threat modeling, a 100-scenario attack suite (prompt injection, data poisoning, multi-turn escalation, tool misuse), and a 4-component detection pipeline to [BioTeam-AI](https://github.com/jang1563/AI_Scientist_team), a 23-agent bioinformatics system with Docker sandboxing.
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://www.python.org/)
+[![🤗 Attack Scenarios](https://img.shields.io/badge/🤗%20Dataset-attack--scenarios-yellow)](https://huggingface.co/datasets/jang1563/agentshield-attack-scenarios)
+[![ASR Reduction 100%](https://img.shields.io/badge/ASR%20Reduction-100%25-brightgreen)](#results)
+[![FPR 1.0%](https://img.shields.io/badge/FPR-1.0%25-brightgreen)](#results)
+
+Security audit framework for agentic AI systems. Applies STRIDE threat modeling, a 100-scenario attack suite (prompt injection, data poisoning, multi-turn escalation, tool misuse), and a 4-component detection pipeline to [BioTeam-AI](https://github.com/jang1563/bioteam-ai), a 23-agent bioinformatics system with Docker sandboxing.
 
 **Author:** JangKeun Kim, Weill Cornell Medicine (jak4013@med.cornell.edu)
+**Status:** Defensive security research tool. See [Limitations](#limitations) and [Responsible Use](#responsible-use).
+
+## Try It in 30 Seconds
+
+The 100-scenario attack dataset is published on HuggingFace and can be used to evaluate any agentic AI system without cloning this repo.
+
+```python
+from datasets import load_dataset
+
+scenarios = load_dataset("jang1563/agentshield-attack-scenarios", split="train")
+print(f"Loaded {len(scenarios)} scenarios across {len(set(s['category'] for s in scenarios))} categories")
+print("Example:", scenarios[0])
+```
+
+For local detection, point AgentShield's output classifier at [Constitutional BioGuard](https://huggingface.co/jang1563/constitutional-bioguard-deberta-v1) (~5ms/query, no API cost).
 
 ## Results
 
@@ -13,7 +34,7 @@ Evaluated using **Claude Haiku** (`claude-haiku-4-5-20251001`) as the target age
 | ASR reduction | >= 80% | 100% | PASS |
 | Direct injection detection | >= 90% | 100% | PASS |
 | Multi-turn escalation detection | >= 70% | 100% | PASS |
-| False positive rate | < 5% | 1.0% | PASS |
+| False positive rate | < 5% | 1.0% (1/100, Wilson 95% CI [0.2%, 5.5%]) | PASS |
 
 ### Per-Category Breakdown
 
@@ -81,19 +102,24 @@ Full catalogue in [docs/attack_catalogue.md](docs/attack_catalogue.md).
 
 ## Quick Start
 
-### Prerequisites
+### Use the Attack Dataset Only
 
+See [Try It in 30 Seconds](#try-it-in-30-seconds) above. Just `pip install datasets` and load from HuggingFace.
+
+### Run the Full Evaluation Pipeline
+
+**Prerequisites:**
 - Python >= 3.10
-- Constitutional BioGuard trained model (for output classifier)
+- Constitutional BioGuard trained model (for output classifier; auto-downloads from HuggingFace)
 
-### Installation
-
+**Installation:**
 ```bash
+git clone https://github.com/jang1563/agentshield
+cd agentshield
 pip install -e ".[dev]"
 ```
 
-### Run Evaluation
-
+**Run evaluation:**
 ```bash
 # Generate threat model
 python scripts/run_threat_model.py
@@ -108,10 +134,10 @@ python scripts/run_attacks.py --mode defended
 
 ### Key Outputs
 
-- `data/results/evaluation_summary.json` -- All metrics
-- `data/results/figures/` -- ASR comparison, escalation trajectories, detector performance
-- `docs/evaluation_report.md` -- Full evaluation report
-- `docs/threat_model.md` -- STRIDE threat model
+- `data/results/evaluation_summary.json`: All metrics
+- `data/results/figures/`: ASR comparison, escalation trajectories, detector performance
+- `docs/evaluation_report.md`: Full evaluation report
+- `docs/threat_model.md`: STRIDE threat model
 
 ## Detection Pipeline Components
 
@@ -120,7 +146,7 @@ Pattern-based injection detector with 18 injection patterns, 5 role override pat
 
 ### 2. Output Classifier
 Safety filter with 3 modes:
-- **Local model** (primary): Constitutional BioGuard's DeBERTa classifier (~5ms/query)
+- **Local model** (primary): [Constitutional BioGuard](https://huggingface.co/jang1563/constitutional-bioguard-deberta-v1) DeBERTa classifier (~5ms/query)
 - **LLM judge**: Claude API with 4-dimensional rubric (refusal, completeness, specificity, safety)
 - **Keyword fallback**: Pattern matching for known dangerous content
 
@@ -156,7 +182,7 @@ agentshield/
 │   │   ├── stride.py             # Data models
 │   │   ├── bioteam_surfaces.py   # 9 attack surfaces
 │   │   └── risk_matrix.py        # Likelihood x impact scoring
-│   ├── attacks/                  # 40 attack scenarios
+│   ├── attacks/                  # 100 attack scenarios (25 per category)
 │   │   ├── base.py               # AttackScenario + AttackResult
 │   │   ├── direct_injection.py
 │   │   ├── indirect_injection.py
@@ -199,15 +225,27 @@ agentshield/
 
 ## Cross-Project Integration
 
-AgentShield's output classifier uses [Constitutional BioGuard](../constitutional_bioguard/)'s trained DeBERTa model for real-time content classification. Set the model path via environment variable:
+AgentShield's output classifier uses [Constitutional BioGuard](https://github.com/jang1563/constitutional-bioguard)'s trained DeBERTa model for real-time content classification. Set the model path via environment variable:
 
 ```bash
 export BIOGUARD_MODEL_DIR=/path/to/constitutional_bioguard/models/deberta_bioguard_v1
 ```
 
+Related projects:
+- [bio-overrefusal-v0.1](https://github.com/jang1563/bio-overrefusal-v0.1): 201-query expert-annotated dataset measuring legitimate-biology FPR for frontier models
+- [ambiguity-casebook](https://github.com/jang1563/ambiguity-casebook): 36 dual-use boundary cases for classifier stress-testing
+- [bio-constitution-rules](https://github.com/jang1563/bio-constitution-rules): 30 rules library covering 6 bio domains, validated by 5-fold CV
+
+## What This Is Not
+
+- Not a complete defense on its own (recommended as one layer in defense-in-depth: upstream policy + downstream model refusal training + human review)
+- Not a substitute for production red-teaming or formal penetration testing
+- Not validated on adaptive attackers; static suite assumes attacker does not iterate based on detection feedback
+- Not a tool for attacking systems you do not own or have explicit authorization to test
+
 ## Limitations
 
-**Statistical power**: Each attack category has 10 scenarios. With n=10, a 90% detection rate has a 95% confidence interval of approximately ±19 percentage points. Results should be interpreted as directional, not definitive benchmarks.
+**Statistical power**: Each attack category has 25 scenarios. With n=25, a 90% detection rate has a 95% confidence interval of approximately ±12 percentage points. Results should be interpreted as directional, not definitive benchmarks.
 
 **Mock agent gap**: All attacks run against scripted mock agents, not live BioTeam-AI. Scripted responses may not reflect how real models behave under adversarial pressure.
 
@@ -230,7 +268,7 @@ Intended uses:
 
 Do not use the attack scenarios to attack systems you do not own or have explicit authorization to test. The threat model and attack catalogue describe vulnerabilities in BioTeam-AI (a research system the author built and controls) and are published to support the security research community, not to provide a playbook for unauthorized access.
 
-The 1.0% false positive rate means legitimate requests will occasionally be blocked — calibrate thresholds for your deployment context.
+The 1.0% false positive rate means legitimate requests will occasionally be blocked. Calibrate thresholds for your deployment context.
 
 ## Resources
 
@@ -242,17 +280,18 @@ The 1.0% false positive rate means legitimate requests will occasionally be bloc
 
 ## Citation
 
-If you use this work, please cite:
+See [CITATION.cff](CITATION.cff) for the structured citation, or use:
 
 ```
-@software{kim2025agentshield,
+@software{kim2026agentshield,
   author = {Kim, JangKeun},
   title  = {AgentShield: Security Audit Framework for Agentic AI Systems},
-  year   = {2025},
+  year   = {2026},
   url    = {https://github.com/jang1563/agentshield},
+  version = {0.1.0},
 }
 ```
 
 ## License
 
-MIT
+MIT (see [LICENSE](LICENSE)).
