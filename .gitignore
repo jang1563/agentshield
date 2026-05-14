@@ -42,3 +42,8 @@ Thumbs.db
 
 # Jupyter
 .ipynb_checkpoints/
+
+# Internal strategy / positioning documents (do not publish)
+docs/XAIRA_POSITIONING.md
+docs/*_POSITIONING.md
+docs/*_STRATEGY.md

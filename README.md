@@ -9,7 +9,11 @@
 Security audit framework for agentic AI systems. Applies STRIDE threat modeling, a 100-scenario attack suite (prompt injection, data poisoning, multi-turn escalation, tool misuse), and a 4-component detection pipeline to [BioTeam-AI](https://github.com/jang1563/bioteam-ai), a 23-agent bioinformatics system with Docker sandboxing.
 
 **Author:** JangKeun Kim, Weill Cornell Medicine (jak4013@med.cornell.edu)
-**Status:** Defensive security research tool. See [Limitations](#limitations) and [Responsible Use](#responsible-use).
+**Status:** Defensive security research tool. See [Limitations](#limitations), [Responsible Use](#responsible-use), and [`SAFETY.md`](SAFETY.md).
+
+## Reviewer Framing
+
+This is a **defense architecture demonstration**, not an attack catalogue. The published 100-scenario suite exists so safeguard teams can reproduce the detection-pipeline measurement on their own agent stacks and contribute improvements back. The headline metrics (100% ASR reduction, 1.0% FPR) are slice-level results on this specific scenario suite, this specific BioTeam-AI agent stack, this specific Claude Haiku target; numbers should not be read as a global claim about agent security. The artifact a reviewer should evaluate is the architecture: STRIDE threat model + 4-component detection pipeline + reproducible-by-design attack scenarios.
 
 ## Try It in 30 Seconds
 
@@ -235,6 +239,19 @@ Related projects:
 - [bio-overrefusal-v0.1](https://github.com/jang1563/bio-overrefusal-v0.1): 201-query expert-annotated dataset measuring legitimate-biology FPR for frontier models
 - [ambiguity-casebook](https://github.com/jang1563/ambiguity-casebook): 36 dual-use boundary cases for classifier stress-testing
 - [bio-constitution-rules](https://github.com/jang1563/bio-constitution-rules): 30 rules library covering 6 bio domains, validated by 5-fold CV
+
+## How This Maps to AI Safety Practice
+
+This framework sits in the **agent safeguards** layer of the safety stack:
+
+- **Capability evaluations** (e.g. WMDP, biothreat-eval): measure what a base model could enable. AgentShield measures what a deployed agent stack does enable, with multi-turn state and tool access.
+- **Output classifiers** (e.g. [constitutional-bioguard](https://github.com/jang1563/constitutional-bioguard)): operate on single response strings; AgentShield operates on the full agent execution trace.
+- **Over-refusal calibration** ([bio-overrefusal-v0.1](https://github.com/jang1563/bio-overrefusal-v0.1)): measures false-positive cost on benign single-turn queries; AgentShield's 1.0% FPR is the analogous measurement for benign multi-turn agent runs.
+- **Boundary-case adjudication** ([ambiguity-casebook](https://github.com/jang1563/ambiguity-casebook)): documents where reasonable experts disagree on single queries; AgentShield's multi-turn escalation scenarios document the analogous boundary in agent execution.
+
+A safeguard team using this framework would: (a) run the 100-scenario suite against their own agent stack, (b) compare per-category ASR and FPR to the BioTeam-AI baseline reported here, (c) treat any per-component detection-rate gap as a candidate for safeguard upgrade, (d) extend the threat model to attack vectors specific to their domain.
+
+This work is independent and does not represent any provider's internal evaluation pipeline.
 
 ## What This Is Not
 
