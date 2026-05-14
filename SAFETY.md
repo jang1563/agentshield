@@ -33,7 +33,7 @@ of agent stacks, not to enable adversarial use.
 A May 2026 portfolio audit recommended moving the scenario JSON to a gated
 path. After review, this repository **deliberately keeps the scenarios
 open** while adding cryptographic provenance via
-[`data/hf_export/SCENARIOS_MANIFEST.md`](data/hf_export/SCENARIOS_MANIFEST.md).
+[`docs/SCENARIOS_MANIFEST.md`](docs/SCENARIOS_MANIFEST.md).
 
 The reasoning:
 
@@ -58,7 +58,7 @@ The reasoning:
    meaningful concern is whether someone could silently fork, modify, and
    redistribute the scenarios as if they were the canonical suite. The
    SHA-256 manifest in
-   [`data/hf_export/SCENARIOS_MANIFEST.md`](data/hf_export/SCENARIOS_MANIFEST.md)
+   [`docs/SCENARIOS_MANIFEST.md`](docs/SCENARIOS_MANIFEST.md)
    addresses this without restricting availability.
 
 If a specific scenario warrants gating after first release (e.g. a future
@@ -74,7 +74,7 @@ manifest, rather than the entire suite being moved behind a gate.
   to release.
 - Internal strategy documents (positioning, role-fit analyses) are
   gitignored and never appear in the public repository.
-- See [`data/hf_export/SCENARIOS_MANIFEST.md`](data/hf_export/SCENARIOS_MANIFEST.md)
+- See [`docs/SCENARIOS_MANIFEST.md`](docs/SCENARIOS_MANIFEST.md)
   for cryptographic provenance of the scenario JSONL.
 
 ## Reporting Concerns

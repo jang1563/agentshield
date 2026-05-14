@@ -15,7 +15,7 @@ Security audit framework for agentic AI systems. Applies STRIDE threat modeling,
 
 This is a **defense architecture demonstration**, not an attack catalogue. The published 100-scenario suite exists so safeguard teams can reproduce the detection-pipeline measurement on their own agent stacks and contribute improvements back. The headline metrics (100% ASR reduction, 1.0% FPR) are slice-level results on this specific scenario suite, this specific BioTeam-AI agent stack, this specific Claude Haiku target; numbers should not be read as a global claim about agent security. The artifact a reviewer should evaluate is the architecture: STRIDE threat model + 4-component detection pipeline + reproducible-by-design attack scenarios.
 
-The scenarios are released openly with cryptographic provenance (see [`data/hf_export/SCENARIOS_MANIFEST.md`](data/hf_export/SCENARIOS_MANIFEST.md)) rather than gated. The reasoning is documented in [`SAFETY.md` § "Why we publish openly"](SAFETY.md): scenarios are abstract attack-category exemplars at the level already covered by OWASP LLM Top 10 and the public red-team literature; gating would harm defenders without moving the attacker's frontier.
+The scenarios are released openly with cryptographic provenance (see [`docs/SCENARIOS_MANIFEST.md`](docs/SCENARIOS_MANIFEST.md)) rather than gated. The reasoning is documented in [`SAFETY.md` § "Why we publish openly"](SAFETY.md): scenarios are abstract attack-category exemplars at the level already covered by OWASP LLM Top 10 and the public red-team literature; gating would harm defenders without moving the attacker's frontier.
 
 ## Try It in 30 Seconds
 
